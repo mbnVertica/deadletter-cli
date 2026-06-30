@@ -91,6 +91,120 @@ dl -h
 
 ---
 
+## Example Output
+
+### Human-readable (`dl --env dev`)
+
+```
+Discovering entities in 'dev'...
+Discovered 5 entity/entities in acme-dev.servicebus.windows.net
+
+[WARN] audit-log                    — 1 dead letter(s)
+
+         ─────────────────────────────────────────────────
+         #1   Seq:1048  Enqueued:2026-06-28 09:14:52
+               Reason: MaxDeliveryCountExceeded
+               Error:  Object reference not set to an instance of an object.
+         ─────────────────────────────────────────────────
+
+[ERR]  events > inventory-service   — The messaging entity 'acme-dev/subscriptions/inventory-service'
+                                      could not be found. HTTP status code: NotFound.
+[OK]   notifications                — 0 dead letters
+[WARN] orders                       — 3 dead letter(s)
+
+         ─────────────────────────────────────────────────
+         3x   Seq range: 2201 – 2203  |  First: 2026-06-27 14:01  Last: 2026-06-27 14:09
+               Reason: MaxDeliveryCountExceeded
+               Error:  Failed to deserialize message body: unexpected token 'null' at path $.CustomerId.
+         ─────────────────────────────────────────────────
+
+[WARN] payments                     — 1 dead letter(s)
+
+         ─────────────────────────────────────────────────
+         #1   Seq:879   Enqueued:2026-06-29 22:47:03
+               Reason: ProcessingFailed
+               Error:  Timeout waiting for downstream service 'fraud-check' after 30000ms.
+         ─────────────────────────────────────────────────
+
+
+Summary: 1 entry/entries could not be checked — verify your connection string.
+Summary: 3 entry/entries affected, 5 total dead letter(s).
+```
+
+### JSON (`dl --env dev --format json`)
+
+```json
+{
+  "Environment": "dev",
+  "Queues": [
+    {
+      "Name": "audit-log",
+      "DeadLetterCount": 1,
+      "Messages": [
+        {
+          "SequenceNumber": 1048,
+          "Reason": "MaxDeliveryCountExceeded",
+          "ErrorDescription": "Object reference not set to an instance of an object.",
+          "EnqueuedTime": "2026-06-28 09:14:52 +02:00"
+        }
+      ]
+    },
+    {
+      "Name": "events > inventory-service",
+      "DeadLetterCount": 0,
+      "CheckError": "The messaging entity 'acme-dev/subscriptions/inventory-service' could not be found. HTTP status code: NotFound.",
+      "Messages": []
+    },
+    {
+      "Name": "notifications",
+      "DeadLetterCount": 0,
+      "Messages": []
+    },
+    {
+      "Name": "orders",
+      "DeadLetterCount": 3,
+      "Messages": [
+        {
+          "SequenceNumber": 2201,
+          "Reason": "MaxDeliveryCountExceeded",
+          "ErrorDescription": "Failed to deserialize message body: unexpected token 'null' at path $.CustomerId.",
+          "EnqueuedTime": "2026-06-27 14:01:33 +02:00"
+        },
+        {
+          "SequenceNumber": 2202,
+          "Reason": "MaxDeliveryCountExceeded",
+          "ErrorDescription": "Failed to deserialize message body: unexpected token 'null' at path $.CustomerId.",
+          "EnqueuedTime": "2026-06-27 14:05:17 +02:00"
+        },
+        {
+          "SequenceNumber": 2203,
+          "Reason": "MaxDeliveryCountExceeded",
+          "ErrorDescription": "Failed to deserialize message body: unexpected token 'null' at path $.CustomerId.",
+          "EnqueuedTime": "2026-06-27 14:09:02 +02:00"
+        }
+      ]
+    },
+    {
+      "Name": "payments",
+      "DeadLetterCount": 1,
+      "Messages": [
+        {
+          "SequenceNumber": 879,
+          "Reason": "ProcessingFailed",
+          "ErrorDescription": "Timeout waiting for downstream service 'fraud-check' after 30000ms.",
+          "EnqueuedTime": "2026-06-29 22:47:03 +02:00"
+        }
+      ]
+    }
+  ],
+  "TotalDeadLetters": 5,
+  "AffectedQueues": 3,
+  "ErrorQueues": 1
+}
+```
+
+---
+
 ## Exit Codes
 
 | Code | Meaning |
