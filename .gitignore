@@ -1,0 +1,9 @@
+# User credentials — never commit this
+queues.json
+
+# Build output
+bin/
+obj/
+
+# Publish output
+publish/

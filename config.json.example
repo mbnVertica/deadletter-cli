@@ -1,0 +1,6 @@
+{
+  "Environments": [
+    { "Name": "dev" },
+    { "Name": "prod" }
+  ]
+}

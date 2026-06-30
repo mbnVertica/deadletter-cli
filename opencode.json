@@ -1,0 +1,16 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "read": {
+      "config.json": "deny"
+    },
+    "bash": {
+      "DeadletterCLI.exe": "allow",
+      "DeadletterCLI.exe *": "allow"
+    },
+    "pwsh": {
+      "DeadletterCLI.exe": "allow",
+      "DeadletterCLI.exe *": "allow"
+    }
+  }
+}

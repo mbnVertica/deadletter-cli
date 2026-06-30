@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>dl</AssemblyName>
+    <RootNamespace>DeadletterCLI</RootNamespace>
+    <!-- Single-file publish: dotnet publish -c Release -r win-x64 /p:PublishSingleFile=true /p:SelfContained=false -->
+    <PublishSingleFile>true</PublishSingleFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Azure.Messaging.ServiceBus" Version="7.20.1" />
+    <PackageReference Include="Meziantou.Framework.Win32.CredentialManager" Version="2.0.1" />
+  </ItemGroup>
+
+</Project>
