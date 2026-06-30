@@ -612,9 +612,6 @@ static class JsonPrinter
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
-    private static string? FirstLine(string? s)
-        => s is null ? null : (s.Split('\n')[0].Trim() is { Length: > 0 } l ? l : null);
-
     public static void Print(string envName, DeadLetterResult[] results)
     {
         var queues = results.Select(r => new JsonQueue(
@@ -624,7 +621,7 @@ static class JsonPrinter
             r.Messages.Select(m => new JsonMessage(
                 m.SequenceNumber,
                 m.DeadLetterReason,
-                FirstLine(m.DeadLetterErrorDescription),
+                m.DeadLetterErrorDescription,
                 m.EnqueuedTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss zzz")
             )).ToList()
         )).ToList();
@@ -647,7 +644,7 @@ static class JsonPrinter
             r.Messages.Select(m => new JsonMessage(
                 m.SequenceNumber,
                 m.DeadLetterReason,
-                FirstLine(m.DeadLetterErrorDescription),
+                m.DeadLetterErrorDescription,
                 m.EnqueuedTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss zzz")
             )).ToList()
         )).ToList();

@@ -144,7 +144,7 @@ Summary: 3 entry/entries affected, 5 total dead letter(s).
         {
           "SequenceNumber": 1048,
           "Reason": "MaxDeliveryCountExceeded",
-          "ErrorDescription": "Object reference not set to an instance of an object.",
+          "ErrorDescription": "Object reference not set to an instance of an object.\n   at Acme.Audit.AuditLogHandler.HandleAsync(ServiceBusReceivedMessage msg) in AuditLogHandler.cs:line 47\n   at Acme.Audit.Worker.ExecuteAsync(CancellationToken ct) in Worker.cs:line 82",
           "EnqueuedTime": "2026-06-28 09:14:52 +02:00"
         }
       ]
@@ -167,19 +167,19 @@ Summary: 3 entry/entries affected, 5 total dead letter(s).
         {
           "SequenceNumber": 2201,
           "Reason": "MaxDeliveryCountExceeded",
-          "ErrorDescription": "Failed to deserialize message body: unexpected token 'null' at path $.CustomerId.",
+          "ErrorDescription": "Failed to deserialize message body: unexpected token 'null' at path $.CustomerId.\n   at Acme.Orders.Serialization.MessageDeserializer.Deserialize(BinaryData body) in MessageDeserializer.cs:line 31\n   at Acme.Orders.OrderHandler.HandleAsync(ServiceBusReceivedMessage msg) in OrderHandler.cs:line 58",
           "EnqueuedTime": "2026-06-27 14:01:33 +02:00"
         },
         {
           "SequenceNumber": 2202,
           "Reason": "MaxDeliveryCountExceeded",
-          "ErrorDescription": "Failed to deserialize message body: unexpected token 'null' at path $.CustomerId.",
+          "ErrorDescription": "Failed to deserialize message body: unexpected token 'null' at path $.CustomerId.\n   at Acme.Orders.Serialization.MessageDeserializer.Deserialize(BinaryData body) in MessageDeserializer.cs:line 31\n   at Acme.Orders.OrderHandler.HandleAsync(ServiceBusReceivedMessage msg) in OrderHandler.cs:line 58",
           "EnqueuedTime": "2026-06-27 14:05:17 +02:00"
         },
         {
           "SequenceNumber": 2203,
           "Reason": "MaxDeliveryCountExceeded",
-          "ErrorDescription": "Failed to deserialize message body: unexpected token 'null' at path $.CustomerId.",
+          "ErrorDescription": "Failed to deserialize message body: unexpected token 'null' at path $.CustomerId.\n   at Acme.Orders.Serialization.MessageDeserializer.Deserialize(BinaryData body) in MessageDeserializer.cs:line 31\n   at Acme.Orders.OrderHandler.HandleAsync(ServiceBusReceivedMessage msg) in OrderHandler.cs:line 58",
           "EnqueuedTime": "2026-06-27 14:09:02 +02:00"
         }
       ]
@@ -191,7 +191,7 @@ Summary: 3 entry/entries affected, 5 total dead letter(s).
         {
           "SequenceNumber": 879,
           "Reason": "ProcessingFailed",
-          "ErrorDescription": "Timeout waiting for downstream service 'fraud-check' after 30000ms.",
+          "ErrorDescription": "Timeout waiting for downstream service 'fraud-check' after 30000ms.\n   at Acme.Payments.FraudCheckClient.CheckAsync(PaymentMessage msg) in FraudCheckClient.cs:line 94\n   at Acme.Payments.PaymentHandler.HandleAsync(ServiceBusReceivedMessage msg) in PaymentHandler.cs:line 63",
           "EnqueuedTime": "2026-06-29 22:47:03 +02:00"
         }
       ]
@@ -230,7 +230,7 @@ Single environment (`dl --env <name> --format json`):
         {
           "SequenceNumber": 42,
           "Reason": "MaxDeliveryCountExceeded",
-          "ErrorDescription": "Value cannot be null. (Parameter 'source')",
+          "ErrorDescription": "Value cannot be null. (Parameter 'source')\n   at Orders.MessageHandler.ProcessAsync(ServiceBusReceivedMessage msg)\n   at Azure.Messaging.ServiceBus.ServiceBusProcessor.ProcessMessageAsync()",
           "EnqueuedTime": "2025-06-01 08:32:11 +02:00"
         }
       ]
