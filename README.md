@@ -116,7 +116,7 @@ Single environment (`dl --env <name> --format json`):
         {
           "SequenceNumber": 42,
           "Reason": "MaxDeliveryCountExceeded",
-          "MessageId": "abc-123",
+          "ErrorDescription": "Value cannot be null. (Parameter 'source')",
           "EnqueuedTime": "2025-06-01 08:32:11 +02:00"
         }
       ]

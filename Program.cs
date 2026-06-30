@@ -48,7 +48,7 @@ record DeadLetterResult(string DisplayName, List<DeadLetterMessage> Messages, st
 record JsonMessage(
     long SequenceNumber,
     string? Reason,
-    string? MessageId,
+    string? ErrorDescription,
     string EnqueuedTime
 );
 
@@ -443,6 +443,47 @@ static class DeadLetterPeeker
 
 static class Printer
 {
+    private const string ErrorIndent = "                        "; // 24 chars, aligns under error text
+    private const int    WrapWidth   = 80;                         // usable columns before wrapping
+
+    private static void WriteWrappedError(string text)
+    {
+        // First line: label already written by caller, so we just fill the remaining width.
+        // Subsequent lines: indented to align under the first character of the error text.
+        int firstLineWidth = WrapWidth - ErrorIndent.Length;
+        if (text.Length <= firstLineWidth)
+        {
+            Console.WriteLine(text);
+            return;
+        }
+
+        // Word-wrap: break on spaces where possible.
+        var words    = text.Split(' ');
+        var line     = new System.Text.StringBuilder();
+        bool isFirst = true;
+        int  limit   = firstLineWidth;
+
+        foreach (var word in words)
+        {
+            if (line.Length == 0)
+            {
+                line.Append(word);
+            }
+            else if (line.Length + 1 + word.Length <= limit)
+            {
+                line.Append(' ').Append(word);
+            }
+            else
+            {
+                Console.WriteLine(line.ToString());
+                line.Clear().Append(isFirst ? ErrorIndent : "").Append(word);
+                if (isFirst) { isFirst = false; limit = WrapWidth; }
+                else         { line.Clear().Append(ErrorIndent).Append(word); limit = WrapWidth; }
+            }
+        }
+        if (line.Length > 0) Console.WriteLine(line.ToString());
+    }
+
     public static void PrintResult(DeadLetterResult result, int nameWidth)
     {
         var name = result.DisplayName.PadRight(nameWidth);
@@ -470,16 +511,72 @@ static class Printer
         Console.ResetColor();
         Console.WriteLine($"{name} — {result.Messages.Count} dead letter(s)");
 
-        for (int i = 0; i < result.Messages.Count; i++)
+        // Group by identical (Reason, first line of ErrorDescription)
+        var groups = result.Messages
+            .GroupBy(m => (
+                Reason: m.DeadLetterReason ?? "",
+                Error:  m.DeadLetterErrorDescription?.Split('\n')[0].Trim() ?? ""
+            ))
+            .ToList();
+
+        var displayed = groups.Take(10).ToList();
+        int hidden    = groups.Count - displayed.Count;
+
+        Console.WriteLine();
+        for (int i = 0; i < displayed.Count; i++)
         {
-            var m        = result.Messages[i];
-            var reason    = m.DeadLetterReason ?? "(no reason)";
-            var enqueued  = m.EnqueuedTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
-            Console.WriteLine($"         #{i + 1,-4} Seq:{m.SequenceNumber}  Enqueued:{enqueued}");
-            Console.WriteLine($"               Reason: {reason}");
-            if (m.MessageId is not null)
-                Console.WriteLine($"               MsgId:  {m.MessageId}");
+            var group   = displayed[i];
+            var msgs    = group.ToList();
+            var reason  = group.Key.Reason is { Length: > 0 } r ? r : "(no reason)";
+            var errLine = group.Key.Error  is { Length: > 0 } e ? e : null;
+
+            Console.WriteLine("         ─────────────────────────────────────────────────");
+
+            if (msgs.Count == 1)
+            {
+                var m        = msgs[0];
+                var enqueued = m.EnqueuedTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss");
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.WriteLine($"         #{i + 1,-4} Seq:{m.SequenceNumber}  Enqueued:{enqueued}");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine($"               Reason: {reason}");
+                if (errLine is not null)
+                {
+                    Console.Write("               Error:  ");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    WriteWrappedError(errLine);
+                }
+                Console.ResetColor();
+            }
+            else
+            {
+                var ordered  = msgs.OrderBy(m => m.SequenceNumber).ToList();
+                var firstSeq = ordered.First().SequenceNumber;
+                var lastSeq  = ordered.Last().SequenceNumber;
+                var firstEnq = ordered.First().EnqueuedTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+                var lastEnq  = ordered.Last().EnqueuedTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm");
+                Console.ForegroundColor = ConsoleColor.DarkYellow;
+                Console.WriteLine($"         {msgs.Count}x   Seq range: {firstSeq} – {lastSeq}  |  First: {firstEnq}  Last: {lastEnq}");
+                Console.ForegroundColor = ConsoleColor.Gray;
+                Console.WriteLine($"               Reason: {reason}");
+                if (errLine is not null)
+                {
+                    Console.Write("               Error:  ");
+                    Console.ForegroundColor = ConsoleColor.White;
+                    WriteWrappedError(errLine);
+                }
+                Console.ResetColor();
+            }
         }
+
+        if (hidden > 0)
+        {
+            Console.WriteLine("         ─────────────────────────────────────────────────");
+            Console.WriteLine($"         ... and {hidden} more group(s) not shown");
+        }
+
+        Console.WriteLine("         ─────────────────────────────────────────────────");
+        Console.WriteLine();
     }
 
     public static void PrintSummary(int totalDead, int affected, int errors)
@@ -515,6 +612,9 @@ static class JsonPrinter
         DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
     };
 
+    private static string? FirstLine(string? s)
+        => s is null ? null : (s.Split('\n')[0].Trim() is { Length: > 0 } l ? l : null);
+
     public static void Print(string envName, DeadLetterResult[] results)
     {
         var queues = results.Select(r => new JsonQueue(
@@ -524,7 +624,7 @@ static class JsonPrinter
             r.Messages.Select(m => new JsonMessage(
                 m.SequenceNumber,
                 m.DeadLetterReason,
-                m.MessageId,
+                FirstLine(m.DeadLetterErrorDescription),
                 m.EnqueuedTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss zzz")
             )).ToList()
         )).ToList();
@@ -547,7 +647,7 @@ static class JsonPrinter
             r.Messages.Select(m => new JsonMessage(
                 m.SequenceNumber,
                 m.DeadLetterReason,
-                m.MessageId,
+                FirstLine(m.DeadLetterErrorDescription),
                 m.EnqueuedTime.ToLocalTime().ToString("yyyy-MM-dd HH:mm:ss zzz")
             )).ToList()
         )).ToList();
